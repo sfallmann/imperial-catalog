@@ -1,0 +1,21 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6">
+            <h1>{{ item.name }}</h1>
+            <article>
+                {{ item.description }}
+            </article>
+        </div>
+        <div class="col-md-6">
+            {% if item.image %}
+                <img class="img-responsive" src="{{ url_for('uploaded_file', category_id=item.category.id, item_id=item.id, filename=item.image) }}">
+            {% else %}
+                <img class="img-responsive" src="{{ url_for('static', filename='img/no-image-available-hi.png') }}">
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            {% if error %}
+                {{ error }}
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            {% if item %}
+            <form method="POST" action="{{ url_for('updateItem', category_name=item.category.name, item_name=item.name) }}" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="name">Name: </label>
+                    <input class="form-control" name="name" type="text" maxlength="100" placeholder="Item name" value="{{ item.name }}">
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea  class="form-control" name="description" placeholder="Item description">{{ item.description }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select  class="form-control" name="category" required>
+                        {% for category in categories %}
+                            {% if category.id==item.category.id %}
+                                <option selected value="{{ category.id }}">{{ category.name|title }}</option>
+                            {% else %}
+                                <option value="{{ category.id }}">{{ category.name|title }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label form="image">Image</label>
+                    <input type="file" name="image" class="form-control">
+                </div>
+                <input type="submit" class="btn btn-success" value="Submit">
+            </form>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            {% if item.image %}
+                <h3>{{ item.image }}</h3>
+                <img class="img-responsive" src="{{ url_for('uploaded_file', category_id=item.category.id, item_id=item.id, filename=item.image) }}">
+            {% else %}
+                <img class="img-responsive" src="{{ url_for('static', filename='img/no-image-available-hi.png') }}">
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
