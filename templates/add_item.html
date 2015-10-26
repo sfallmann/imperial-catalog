@@ -12,7 +12,7 @@
             <form method="POST" action="{{ url_for('addItem') }}" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="name">Name: </label>
-                    <input class="form-control" name="name" type="text" maxlength="100" placeholder="Item name">
+                    <input required class="form-control" name="name" type="text" maxlength="100" placeholder="Item name">
                 </div>
                 <div class="form-group">
                     <label for="description">Description</label>
@@ -21,8 +21,12 @@
                 <div class="form-group">
                     <label for="category">Category</label>
                     <select  class="form-control" name="category" required>
-                        {% for category in categories %}
-                        <option value="{{ category.id }}">{{ category.name|title }}</option>
+                        {% for _category in categories %}
+                            {% if category and category.id == _category.id %}
+                                <option selected="true" value="{{ category.id }}">{{ _category.name|title }}</option>
+                            {% else %}
+                                <option value="{{ category.id }}">{{ _category.name|title }}</option>
+                            {% endif %}
                         {% endfor %}
                     </select>
                 </div>

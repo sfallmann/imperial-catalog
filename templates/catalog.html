@@ -12,22 +12,26 @@
             </ul>
         </div>
         <div class="col-md-6">
-            <table class="table table-responsive">
+            <table id="-items" class="table table-responsive">
                 <thead>
                     <tr>
                         <th>
                             {% if category %}
-                                <h2>{{ category }} Items ({{ items|length }})</h2>
+                                <h2>{{ category.name }} Items ({{ items|length }})</h2>
                             {% else %}
                                 <h2>Latest Items</h2>
                             {% endif %}
                         </th>
                         <th>
-                            <button class="btn btn-success" id="-addItem">Add Item</button>
+                            {% if category %}
+                                <button class="pull-right btn btn-success" data-category="{{ category.name }}" id="-addItem">Add Item</button>
+                            {% else %}
+                                <button class="pull-right btn btn-success" id="-addItem">Add Item</button>
+                            {% endif %}
                         </th>
                     </tr>
                 </thead>
-                <tbody id="-items">
+                <tbody >
                 {% for item in items %}
                     <tr>
                         <td>
@@ -38,6 +42,8 @@
                             <em>({{ item.category.name|title }})</em>
                         {% else %}
                             <input type="button" class="-updateItem btn btn-primary" data-category="{{ item.category.name }}" data-item="{{ item.name }}" value="Edit">
+                            <input type="button" class="-deleteItem btn btn-danger" data-category="{{ item.category.name }}" data-item="{{ item.name }}" value="Delete">
+
                         {% endif %}
                         </td>
                     </tr>
@@ -51,13 +57,31 @@
 {% endblock %}
 {% block scripts %}
 <script>
-    $("#-addItem").click(function(){ window.location="{{ url_for('addItem') }}"; });
+    $("#-addItem").click(function(){
+        if ($(this).data("category")){
+            var categoryName = $(this).data("category");
+            window.location="/catalog/" + categoryName + "/additem";
+        }
+        else
+            window.location="/catalog/additem";
+    });
 
     $(".-updateItem").click(function(){
         var itemName = $(this).data("item");
         var categoryName = $(this).data("category");
         var url = "/catalog/category/" + categoryName + "/" + itemName +  "/update";
         window.location=url;
+    });
+
+    $(".-deleteItem").click(function(){
+        var itemName = $(this).data("item");
+        var categoryName = $(this).data("category");
+        var url = "/catalog/category/" + categoryName + "/" + itemName +  "/delete";
+        var form = $("<form />", {
+            "method": "POST",
+            "action": url,
+        });
+        form.submit();
     });
 
 </script>

@@ -1,4 +1,4 @@
-import os
+import os, sys
 import shutil
 import random
 import string
@@ -6,7 +6,7 @@ import requests
 import httplib2
 import json
 from flask import Flask, render_template, request, redirect
-from flask import jsonify, url_for, flash, make_response
+from flask import jsonify, url_for, flash, make_response, Markup
 from flask import session as login_session, send_from_directory
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
@@ -21,14 +21,15 @@ from werkzeug import secure_filename
 # http://www.clker.com/cliparts/q/L/P/Y/t/6/no-image-available-hi.png
 
 APPLICATION_NAME = "Imperial Catalog"
+APP_PATH = os.path.abspath('')
 UPLOAD_FOLDER = 'uploads/'
 ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['UPLOAD_FOLDER'] = os.path.abspath('uploads/')
 
-
-engine = create_engine("sqlite:///catalog.db")
+DB_PATH = "sqlite:///%s/catalog.db" % APP_PATH
+engine = create_engine(DB_PATH)
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
@@ -45,12 +46,16 @@ def allowed_file(filename):
 @app.route("/catalog")
 @app.route("/catalog/category/<category>")
 def catalog(category=None):
+
+
     categories = getAllCategories()
     if category:
-        items = (session.query(Category)
-                 .filter(Category.name == category).one()).items
+        category = session.query(Category).filter(Category.name == category).one()
+        items = category.items
     else:
         items = getLatestItems(10)
+
+
     return render_template('catalog.html', categories=categories,
                            items=items, category=category)
 
@@ -65,12 +70,17 @@ def showItem(category=None, item=None):
 
     return render_template('item.html', item=_item)
 
-
 @app.route("/catalog/additem", methods=['GET', 'POST'])
-def addItem():
+@app.route("/catalog/<category>/additem", methods=['GET', 'POST'])
+def addItem(category=None):
+
+    error = None
+
+    if category:
+        category = session.query(Category).filter(Category.name ==  category).one()
 
     categories = session.query(Category).all()
-    error = None
+
 
     if request.method == 'POST':
 
@@ -94,8 +104,16 @@ def addItem():
                     item.image = file.filename
                     session.add(item)
                     session.commit()
+        if error:
+            return render_template('add_item.html', categories=categories, error=error)
+        else:
+            flash('ITEM ADDED!')
+            return redirect(url_for('showItem', category=item.category.name, item=item.name))
 
-    return render_template('add_item.html', categories=categories, error=error)
+    else:
+        return render_template('add_item.html', categories=categories, category=category)
+
+
 
 
 @app.route("/catalog/category/<category_name>/<item_name>/update", methods=['GET', 'POST'])
@@ -154,9 +172,41 @@ def updateItem(category_name, item_name):
             session.add(item)
             session.commit()
 
-        return render_template('update_item.html', categories=categories, item=item, error=error)
+    return render_template('update_item.html', categories=categories, item=item, error=error)
+
+
+@app.route("/catalog/category/<category_name>/<item_name>/delete", methods=['GET', 'POST'])
+def deleteItem(category_name, item_name):
+
+    error = None
+
+    category = session.query(Category).filter(Category.name == category_name).one()
+
+    try:
+        item = session.query(Item).filter(Item.category_id == category.id).filter(Item.name == item_name).one()
+    except NoResultFound:
+        item = None
+        error = "No item exists with this name and category"
+
+    categories = session.query(Category).all()
+
+    if request.method == 'POST' and item is not None:
+
+        if item.image:
+            success, error = deleteItemFileFolder(item.category.id, item.id)
+
+            if success:
+                item.image = None
+            else:
+                return redirect(url_for('showItem', category=item.category.name, item=item.name, error=error))
+
+        category = item.category.name
+        session.delete(item)
+        session.commit()
+        flash("Item deleted")
+        return redirect(url_for('catalog', category=category))
     else:
-        return render_template('update_item.html', categories=categories, item=item, error=error)
+        return redirect(url_for('showItem', category=item.category.name, item=item.name, error=error))
 
 
 @app.route('/uploads/<category_id>/<item_id>/<filename>')

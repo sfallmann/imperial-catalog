@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
     <head>
         <meta charset="utf-8">
@@ -14,12 +15,21 @@
         <!-- for object video embed http://stackoverflow.com/questions/6671232/youtube-api-stop-video -->
 
 <iframe id="background-vid" type="text/html"
-  src="https://www.youtube.com/embed/u3WSG6SDE1w?&showinfo=0&enablejsapi=1&origin=http://localhost:8000&autoplay=1"
+  src="https://www.youtube.com/embed/u3WSG6SDE1w?&showinfo=0&enablejsapi=1&origin=http://localhost:8000"
   frameborder="0"></iframe>
 
-        <div class="container">
-
-
+        <div id="main" class="container">
+            <div class="col-md-12">
+                {% with messages = get_flashed_messages() %}
+                  {% if messages %}
+                    <ul class="flashes">
+                    {% for message in messages %}
+                      <p>{{ message }}</p>
+                    {% endfor %}
+                    </ul>
+                  {% endif %}
+                {% endwith %}
+            </div>
 
             {% block content %}
             {% endblock %}
@@ -47,7 +57,7 @@
             player = new YT.Player('background-vid', {
 
                 videoId: 'u3WSG6SDE1w',
-
+                playerVars: { 'autoplay': 0, 'controls': 1 },
                 events: {
                 'onReady': onPlayerReady,
                 'onStateChange': onPlayerStateChange
@@ -66,7 +76,7 @@
                         index:0
                   });
                 event.target.setLoop({loopPlaylists:"true"});
-                event.target.unMute();
+                event.target.mute();
             event.target.playVideo();
             }
 

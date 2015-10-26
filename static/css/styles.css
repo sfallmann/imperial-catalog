@@ -71,11 +71,78 @@ img, embed, object, video {
     margin-top: 10px;
 }
 
-.container {
+#main {
     background-color: rgba(0,0,0,0.8);
-    padding-bottom: 130px;
-    padding-top: 140px;
+    padding-top: 75px;
+}
+
+option {
+    color: black;
+}
+
+
+
+.flashes {
+    display: none;
+    opacity: 0;
+    -webkit-transition: display 4s, opacity 3s;
+    transition: dispay 4s, opacity 3s;
+}
+
+/* Spinner transforms:  http://www.the-art-of-web.com/css/3d-transforms/ */
+
+#empire_logo_inner {
+    width: 50px;
+    -webkit-animation-name: spinner;
+    -webkit-animation-timing-function: linear;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-duration: 6s;
+
+    animation-name: spinner;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-duration: 6s;
+
+    -webkit-transform-style: preserve-3d;
+    -moz-transform-style: preserve-3d;
+    -ms-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+}
+
+#empire_logo_inner:hover {
+    -webkit-animation-play-state: paused;
+    animation-play-state: paused;
+}
+
+#empire_logo_outer {
+    margin: 1em auto;
+    -webkit-perspective: 400px;
+    -moz-perspective: 400px;
+    -ms-perspective: 400px;
+    perspective: 400px;
+}
+
+  @-webkit-keyframes spinner {
+    from { -webkit-transform: rotateY(0deg);    }
+    to   { -webkit-transform: rotateY(-360deg); }
+  }
+
+  /* all other browsers */
+  @keyframes spinner {
+    from {
+      -moz-transform: rotateY(0deg);
+      -ms-transform: rotateY(0deg);
+      transform: rotateY(0deg);
     }
+    to {
+      -moz-transform: rotateY(-360deg);
+      -ms-transform: rotateY(-360deg);
+      transform: rotateY(-360deg);
+    }
+  }
+
+
+
 
 @media screen and (max-width: 767px){
     #menu-home-title {
@@ -98,3 +165,11 @@ img, embed, object, video {
 
 }
 
+@media screen and (min-width: 768px){
+    #-items {
+        display: block;
+        max-height: 550px;
+        overflow: auto;
+    }
+
+}
