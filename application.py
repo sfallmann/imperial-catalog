@@ -11,10 +11,11 @@ from flask import session as login_session, send_from_directory
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
-from models import Base, User, Category, Item
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 from werkzeug import secure_filename
+from models import Base, User, Category, Item
+from key_gen import get_secret_key
 
 
 # Default image for items obtained here
@@ -37,19 +38,35 @@ session = DBSession()
 
 # From http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
 def allowed_file(filename):
-    ''' Checks the filename to see if it has an allowed extension
+    '''
+        def allowed_file(filename):
 
-        The filename is checked for a '.' and everything to the left
-        of the '.' is checked against the ALLOWED_EXTENSIONS list.
+            Checks the filename to see if it has an allowed extension
 
-        The both are true, the file is an 'allowed file'.
+            The filename is checked for a '.' and everything to the left
+            of the '.' is checked against the ALLOWED_EXTENSIONS list.
+
+            The both are true, the file is an 'allowed file'.
     '''
     return '.' in filename and \
            (filename.rsplit('.', 1)[1]).lower() in ALLOWED_EXTENSIONS
 
 
-''' Function for the catalog home page and
-    the category pages
+# Create anti-forgery state token
+@app.route('/login')
+def showLogin():
+    if request.is_xhr:
+        state = get_secret_key()
+        login_session['state'] = state
+        # return "The current session state is %s" % login_session['state']
+        return render_template('login.html', STATE=state)
+    else:
+        return redirect(url_for('catalog'))
+
+
+'''
+    def catalog(category=None):
+    The catalog home page and the category pages
 '''
 @app.route("/")
 @app.route("/catalog")
@@ -76,7 +93,9 @@ def catalog(category=None):
                            items=items, category=category)
 
 
-''' Function for showing specific items '''
+''' def showItem(category_name=None, item_name=None):
+    Function for showing specific items
+'''
 @app.route("/catalog/category/<category_name>/<item_name>")
 def showItem(category_name=None, item_name=None):
 

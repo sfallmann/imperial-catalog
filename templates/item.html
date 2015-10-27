@@ -5,7 +5,7 @@
         <div class="col-md-4">
             <h1>{{ item.name }}</h1>
             <div>
-                <button class="btn btn-primary"><a href="{{ url_for('updateItem',category_name=item.category.name, item_name=item.name)}}" >Edit</a></button>
+                <button id="edit-button" data-edit="{{ url_for('updateItem',category_name=item.category.name, item_name=item.name)}}" class="btn btn-primary">Edit</button>
                 <button id="delete-button" class="btn btn-danger">Delete</button>
             </div>
             <br>
@@ -52,6 +52,13 @@
         $("#delete-confirm").toggleClass("hide");
         deletePopup = $('#delete-confirm').bPopup();
     });
+
+    $("#edit-button").click(function(){
+        var editPage = $(this).data("edit");
+        console.log(editPage);
+        window.location = editPage;
+    });
+
 
     $("#close-popup").click(function(){
         $("#delete-confirm").toggleClass("hide");

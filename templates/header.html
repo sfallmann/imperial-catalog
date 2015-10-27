@@ -1,6 +1,6 @@
 <header>
-    <div class="row">
-        <div class="col-md-12">
+    <div id="banner" class="row">
+        <div  class="col-md-12">
             <h1>
                 <span id="empire_logo_outer">
                     <img id="empire_logo_inner" src="{{ url_for('static', filename='img/galempire_logo.png')}}">
@@ -10,8 +10,9 @@
         </div>
     </div>
 </header>
-<nav class="navbar navbar-inverse">
-    <div class="container-fluid">
+<div class="row">
+    <nav class="navbar navbar-inverse">
+
         <header class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#catalog-navbar-collapse" aria-expanded="false">
                 <span class="sr-only">Toggle navigation</span>
@@ -30,8 +31,9 @@
             </a>
             <button id="login" type="button" class="btn btn-default navbar-btn navbar-right">Sign in</button>
         </div>
-    </div>
-</nav>
+    </nav>
+</div>
+
 
 
 
