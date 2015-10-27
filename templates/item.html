@@ -1,46 +1,66 @@
 {% extends "main.html" %}
 {% block content %}
-{% include "header.html" %}
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <h1>{{ item.name }}</h1>
             <div>
-                <input type="button" class="-updateItem btn btn-primary" data-category="{{ item.category.name }}" data-item="{{ item.name }}" value="Edit">
-                <input type="button" class="-deleteItem btn btn-danger" data-category="{{ item.category.name }}" data-item="{{ item.name }}" value="Delete">
+                <button class="btn btn-primary"><a href="{{ url_for('updateItem',category_name=item.category.name, item_name=item.name)}}" >Edit</a></button>
+                <button id="delete-button" class="btn btn-danger">Delete</button>
             </div>
             <br>
             <article>
                 {{ item.description }}
             </article>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4"></div>
+        <div  class="col-md-4">
             {% if item.image %}
-                <img class="img-responsive" src="{{ url_for('uploaded_file', category_id=item.category.id, item_id=item.id, filename=item.image) }}">
+                <img class="img-rounded img-responsive" src="{{ url_for('uploaded_file', category_id=item.category.id, item_id=item.id, filename=item.image) }}">
             {% else %}
                 <img class="img-responsive" src="{{ url_for('static', filename='img/no-image-available-hi.png') }}">
             {% endif %}
+
+
         </div>
 
     </div>
 </div>
+
+<div  id="delete-confirm" class="container hide">
+
+    <form  action="{{ url_for('deleteItem', category_name=item.category.name, item_name=item.name)}}" method="POST">
+
+            <h3>Delete {{ item.name }}</h3>
+            <p>Are you sure you want to delete?</p>
+
+        <div class="modal-footer">
+            <input type="submit" class="btn btn-success" value="Confirm">
+            <input class="btn btn-primary" type="button" id="close-popup" value="Close">
+        </div>
+    </form>
+
+</div>
+
 {% endblock %}
 {% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bPopup/0.11.0/jquery.bpopup.min.js"></script>
 <script>
-
-    $(".-updateItem").click(function(){
-        var url = "/catalog/category/{{ item.category.name }}/{{ item.name }}/update";
-        window.location=url;
+(function(){
+    var deletePopup;
+    $("#delete-button").click(function(){
+        $("#delete-confirm").toggleClass("hide");
+        deletePopup = $('#delete-confirm').bPopup();
     });
 
-    $(".-deleteItem").click(function(){
-        var url = "/catalog/category/{{ item.category.name }}/{{ item.name }}/delete";
-        var form = $("<form />", {
-            "method": "POST",
-            "action": url,
-        });
-        form.submit();
+    $("#close-popup").click(function(){
+        $("#delete-confirm").toggleClass("hide");
+        deletePopup.close();
     });
+}());
+
+
+
 
 </script>
 {% endblock %}

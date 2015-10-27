@@ -6,31 +6,23 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-<link href='https://fonts.googleapis.com/css?family=Passion+One:400,700' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
         <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/styles.css') }}">
 
     </head>
     <body class="preload">
 
         <!-- for object video embed http://stackoverflow.com/questions/6671232/youtube-api-stop-video -->
+        <!-- image used for banner at top of page found at  http://www.wallpaprz.com/ -->
 
-<iframe id="background-vid" type="text/html"
-  src="https://www.youtube.com/embed/u3WSG6SDE1w?&showinfo=0&enablejsapi=1&origin=http://localhost:8000"
-  frameborder="0"></iframe>
+        <iframe id="background-vid" type="text/html"
+          src="https://www.youtube.com/embed/u3WSG6SDE1w?&showinfo=0&enablejsapi=1&origin=http://localhost:8000"
+          frameborder="0"></iframe>
+        <div class="container-fluid" id="banner"></div>
+        <div id="main" class="container-fluid">
 
-        <div id="main" class="container">
-            <div class="col-md-12">
-                {% with messages = get_flashed_messages() %}
-                  {% if messages %}
-                    <ul class="flashes">
-                    {% for message in messages %}
-                      <p>{{ message }}</p>
-                    {% endfor %}
-                    </ul>
-                  {% endif %}
-                {% endwith %}
-            </div>
-
+            {% include "header.html" %}
+            {% include "flashes_errors.html" %}
             {% block content %}
             {% endblock %}
         </div>
@@ -91,6 +83,7 @@
                 player.stopVideo();
             }
 
+            console.log("FLASH: {{ messages }}");
             /*
             player.append('<param name="movie" value="https://youtube.com/embed/u3WSG6SDE1w?autoplay=1&controls=1&showinfo=0&autohide=1&loop=1enablejsapi=1&playlist=u3WSG6SDE1w">');
             player.append('<param name="allowScriptAccess" value="always">');

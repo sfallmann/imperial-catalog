@@ -8,16 +8,23 @@
 
 }
 
-
 body {
     background-color: black;
 }
+
+#banner {
+    width: 100%;
+    height: 80px;
+    background-color: firebrick;
+    position: absolute;
+}
 * {
     z-index: 1;
-    font-family: 'Passion One', cursive;
+    font-family: 'Fjalla One', sans-serif;
     font-size: 1.1em;
     color: white;
 }
+
 
 
 ul {
@@ -27,6 +34,8 @@ ul {
 a {
     color: chartreuse;
 }
+
+
 
 a:hover {
     color: crimson;
@@ -38,6 +47,11 @@ a, button {
 
 img, embed, object, video {
     width: 100%;
+
+}
+
+img {
+    z-index: 0;
 }
 
 #ds-icon {
@@ -80,14 +94,36 @@ option {
     color: black;
 }
 
-
-
-.flashes {
-    display: none;
-    opacity: 0;
-    -webkit-transition: display 4s, opacity 3s;
-    transition: dispay 4s, opacity 3s;
+#delete-confirm {
+    background-color: white;
+    border-radius: 10px;
 }
+
+#delete-confirm p, h3 {
+    color: black;
+}
+
+button a {
+    color: white;
+}
+
+button a:hover {
+    color: white;
+    text-decoration: none;
+}
+
+.flash {
+    text-align: center;
+    font-size: 1.2em;
+    color: chartreuse;
+}
+
+.error {
+    color: red;
+    font-size: 1.2em;
+    text-align: center;
+}
+
 
 /* Spinner transforms:  http://www.the-art-of-web.com/css/3d-transforms/ */
 
@@ -152,6 +188,8 @@ option {
     #login {
         margin: 2px 0 0 25px;
     }
+
+
 }
 
 @media screen and (max-width: 1080px ){

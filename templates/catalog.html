@@ -1,13 +1,12 @@
 {% extends "main.html" %}
 {% block content %}
-{% include "header.html" %}
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-6">
             <h2>Categories</h2>
             <ul id="-categories">
             {% for category in categories %}
-                <li><a href="{{ url_for('catalog', category=category.name) }}">{{ category.name }}</a></li>
+                <li><a href="{{ url_for('catalog', category=category.name) }}">{{ category.name }} ({{ category.items|length }})</a></li>
             {% endfor %}
             </ul>
         </div>
@@ -17,7 +16,7 @@
                     <tr>
                         <th>
                             {% if category %}
-                                <h2>{{ category.name }} Items ({{ items|length }})</h2>
+                                <h2>{{ category.name }} Items</h2>
                             {% else %}
                                 <h2>Latest Items</h2>
                             {% endif %}
@@ -35,15 +34,11 @@
                 {% for item in items %}
                     <tr>
                         <td>
-                            <a href="{{ url_for('showItem', category=item.category.name, item=item.name) }}">{{ item.name }}</a>
+                            <a href="{{ url_for('showItem', category_name=item.category.name, item_name=item.name) }}">{{ item.name }}</a>
                         </td>
                         <td>
                         {% if not category %}
                             <em>({{ item.category.name|title }})</em>
-                        {% else %}
-                            <input type="button" class="-updateItem btn btn-primary" data-category="{{ item.category.name }}" data-item="{{ item.name }}" value="Edit">
-                            <input type="button" class="-deleteItem btn btn-danger" data-category="{{ item.category.name }}" data-item="{{ item.name }}" value="Delete">
-
                         {% endif %}
                         </td>
                     </tr>
@@ -66,23 +61,7 @@
             window.location="/catalog/additem";
     });
 
-    $(".-updateItem").click(function(){
-        var itemName = $(this).data("item");
-        var categoryName = $(this).data("category");
-        var url = "/catalog/category/" + categoryName + "/" + itemName +  "/update";
-        window.location=url;
-    });
 
-    $(".-deleteItem").click(function(){
-        var itemName = $(this).data("item");
-        var categoryName = $(this).data("category");
-        var url = "/catalog/category/" + categoryName + "/" + itemName +  "/delete";
-        var form = $("<form />", {
-            "method": "POST",
-            "action": url,
-        });
-        form.submit();
-    });
 
 </script>
 {% endblock %}
