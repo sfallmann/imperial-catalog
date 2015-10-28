@@ -9,6 +9,7 @@
         <link href='https://fonts.googleapis.com/css?family=Fjalla+One' rel='stylesheet' type='text/css'>
         <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/styles.css') }}">
 
+
     </head>
 
     <body class="preload">
@@ -22,27 +23,134 @@
 
 
         </div>
-        <div id="login-popup" class="container hide">
+        <div id="popup" class="container">
+        <div id="authenticate" class="hide">
+            <!-- GOOGLE PLUS SIGN IN-->
+            <div id="signInButton">
+                <span class="g-signin" data-scope="openid email" data-clientid="579154162914-f50hmf2b6d4c3g2ert057hsch6p47u3n.apps.googleusercontent.com" data-redirecturi="postmessage" data-accesstype="offline" data-cookiepolicy="single_host_origin" data-callback="signInCallback" data-approvalprompt="force">
+                </span>
+            </div>
+            <button>
 
+
+                <fb:login-button scope="public_profile,email" onlogin="sendTokenToServer();">
+                    <a href='javascript:sendTokenToServer()'>Login with Facebook</a>
+
+                </fb:login-button>
+
+
+            </button>
+            <div id="result"></div>
+        </div>
         </div>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <script src="//apis.google.com/js/platform.js?onload=start"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bPopup/0.11.0/jquery.bpopup.min.js"></script>
-        <script>
-            //  https://css-tricks.com/transitions-only-after-page-load/  for delaying transitions after page load
-            $(window).load(function() {
-                $("body").removeClass("preload");
-            });
-
-            $("#login-button").click(function(){
-
-                window.location = "{{ url_for('showLogin')}}";
-            });
-
-        </script>
+        <script src="{{ url_for('static', filename='js/lib/spin.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/lib/ui.js') }}" ></script>
 
 
         {% block scripts %}
+        <script>
+            function signInCallback(authResult) {
+                if (authResult['code']) {
+
+                    // Hide the sign-in button now that the user is authorized
+                    $('#signinButton').attr('style', 'display: none');
+
+                    // Send the one-time-use code to the server,
+                    // if the server responds, write a 'login successful' message
+                    // to the web page and then redirect back to the main restaurants page
+                    $.ajax({
+                        type: 'POST',
+                        url: 'ajax/gconnect?state={{STATE}}',
+                        processData: false,
+                        data: authResult['code'],
+                        contentType: 'application/octet-stream; charset=utf-8',
+                        success: function(result) {
+                            // Handle or verify the server response if necessary.
+                            if (result) {
+                                $('#result').html('Login Successful!</br>' + result + '</br>Redirecting...')
+                                setTimeout(function() {
+                                    window.location.href = "/catalog";
+                                }, 4000);
+
+
+                            } else if (authResult['error']) {
+
+                                console.log('There was an error: ' + authResult['error']);
+                            } else {
+                                $('#result').html('Failed to make a server-side call. Check your configuration and console.');
+                            }
+
+                        }
+
+                    });
+                }
+            }
+        </script>
+
+
+
+        <!--END GOOGLE PLUS SIGN IN -->
+
+        <!--FACEBOOK SIGN IN -->
+        <script>
+            window.fbAsyncInit = function() {
+                FB.init({
+                    appId: '1514024772246113',
+                    xfbml: true,
+                    version: 'v2.5'
+                });
+            };
+
+            (function(d, s, id) {
+                var js, fjs = d.getElementsByTagName(s)[0];
+                if (d.getElementById(id)) {
+                    return;
+                }
+                js = d.createElement(s);
+                js.id = id;
+                js.src = "//connect.facebook.net/en_US/sdk.js";
+                fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+
+            // Here we run a very simple test of the Graph API after login is
+            // successful.  See statusChangeCallback() for when this call is made.
+            function sendTokenToServer() {
+                var access_token = FB.getAuthResponse()['accessToken'];
+                console.log(access_token)
+                console.log('Welcome!  Fetching your information.... ');
+                FB.api('/me', function(response) {
+                    console.log('Successful login for: ' + response.name);
+                    $.ajax({
+                        type: 'POST',
+                        url: '/fbconnect?state={{STATE}}',
+                        processData: false,
+                        data: access_token,
+                        contentType: 'application/octet-stream; charset=utf-8',
+                        success: function(result) {
+                            // Handle or verify the server response if necessary.
+                            if (result) {
+                                $('#result').html('Login Successful!</br>' + result + '</br>Redirecting...')
+                                setTimeout(function() {
+                                    window.location.href = "/restaurant";
+                                }, 4000);
+
+
+                            } else {
+                                $('#result').html('Failed to make a server-side call. Check your configuration and console.');
+                            }
+
+                        }
+
+                    });
+
+
+                });
+            }
+        </script>
         {% endblock %}
     </body>
 </html>

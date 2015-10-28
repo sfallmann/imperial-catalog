@@ -23,9 +23,9 @@
                         </th>
                         <th>{% if logged_in %}
                                 {% if category %}
-                                    <button class="pull-right btn btn-success" data-category="{{ category.name }}" id="-addItem">Add Item</button>
+                                    <button class="pull-right btn btn-success" data-url="{{ url_for('addItem', category=category.name) }}" id="addItem">Add Item</button>
                                 {% else %}
-                                    <button class="pull-right btn btn-success" id="-addItem">Add Item</button>
+                            <button class="pull-right btn btn-success" data-url="{{ url_for('addItem') }}"  id="addItem">Add Item</button>
                                 {% endif %}
                             {% endif %}
                         </th>
@@ -52,17 +52,5 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script>
-    $("#-addItem").click(function(){
-        if ($(this).data("category")){
-            var categoryName = $(this).data("category");
-            window.location="/catalog/" + categoryName + "/additem";
-        }
-        else
-            window.location="/catalog/additem";
-    });
 
-
-
-</script>
 {% endblock %}

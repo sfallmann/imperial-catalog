@@ -131,10 +131,13 @@ button a:hover {
     text-align: left;
 }
 
+input {
+    min-height: 50px;
+}
+
+
 
 /* Spinner transforms:  http://www.the-art-of-web.com/css/3d-transforms/ */
-
-
 #empire_logo_inner {
     width: 50px;
     -webkit-animation-name: spinner;

@@ -48,16 +48,6 @@
 {% endblock %}
 {% block scripts %}
 <script>
-    $("#-addItem").click(function(){
-        if ($(this).data("category")){
-            var categoryName = $(this).data("category");
-            window.location="/catalog/" + categoryName + "/additem";
-        }
-        else
-            window.location="/catalog/additem";
-    });
-
-
 
 </script>
 {% endblock %}

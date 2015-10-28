@@ -1,4 +1,5 @@
-<header>
+
+   <header>
     <div id="banner" class="row">
         <div  class="col-md-12">
             <h1>
@@ -10,33 +11,37 @@
         </div>
     </div>
 </header>
-<div class="row">
-    <nav class="navbar navbar-inverse">
+    <div class="row">
+        <nav class="navbar navbar-inverse">
 
-        <header class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#catalog-navbar-collapse" aria-expanded="false">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-        </header>
-        <!-- Death Star Icon: http://www.iconarchive.com/show/star-wars-icons-by-artua/Death-Star-icon.html -->
-        <div class="collapse navbar-collapse" id="catalog-navbar-collapse">
-            <a class="navbar-text"  href="{{url_for('catalog')}}">
-                <div id="ds-icon" saria-hidden="true">
-                    <img src="{{ url_for('static', filename='img/Death-Star-icon.png')}}">
-                </div>
-                <div id="menu-home-title">Home</div>
-            </a>
-            {% if logged_in %}
-                <button id="logout-button" type="button" class="btn btn-default navbar-btn navbar-right">Sign Out</button>
-            {% else  %}
-                <button id="login-button" type="button" class="btn btn-default navbar-btn navbar-right">Sign In</button>
-            {% endif %}
-        </div>
-    </nav>
-</div>
+            <header class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#catalog-navbar-collapse" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </header>
+            <!-- Death Star Icon: http://www.iconarchive.com/show/star-wars-icons-by-artua/Death-Star-icon.html -->
+            <div class="collapse navbar-collapse" id="catalog-navbar-collapse">
+                <a class="navbar-text"  href="{{url_for('catalog')}}">
+                    <div id="ds-icon" saria-hidden="true">
+                        <img src="{{ url_for('static', filename='img/Death-Star-icon.png')}}">
+                    </div>
+                    <div id="menu-home-title">Home</div>
+                </a>
+                {% if logged_in %}
+                <button id="logout-button" data-url="{{ url_for('gdisconnect')}}" data-redirect="{{ url_for('catalog')}}" type="button" class="btn btn-default navbar-btn navbar-right">
+                        Sign Out
+                    </button>
+                {% else  %}
+                <button data-url="{{ url_for('showLogin')}}" id="login-button" type="button" class="btn btn-default navbar-btn navbar-right">
+                    Sign In
+                </button>
+                {% endif %}
+            </div>
+        </nav>
+    </div>
 
 
 

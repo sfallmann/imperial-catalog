@@ -5,6 +5,7 @@ import string
 import requests
 import httplib2
 import json
+from datetime import timedelta
 from flask import Flask, render_template, request, redirect
 from flask import jsonify, url_for, flash, make_response, Markup
 from flask import session as login_session, send_from_directory
@@ -61,6 +62,9 @@ def allowed_file(filename):
 def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
+
+    login_session.permanent = True
+    app.permanent_session_lifetime = timedelta(minutes=10)
     login_session['state'] = state
     # return "The current session state is %s" % login_session['state']
     return render_template('login.html', STATE=state)
@@ -155,7 +159,7 @@ def gconnect():
 
 
 # DISCONNECT - Revoke a current user's token and reset their login_session
-@app.route('/gdisconnect')
+@app.route('/ajax/gdisconnect', methods=['POST'])
 def gdisconnect():
         # Only disconnect a connected user.
     access_token = login_session.get('access_token')
@@ -171,19 +175,19 @@ def gdisconnect():
 
     if result['status'] == '200':
         # Reset the user's sesson.
-        del login_session['credentials']
+        del login_session['access_token']
         del login_session['gplus_id']
         del login_session['name']
         del login_session['email']
         del login_session['image']
 
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
+        response = make_response(json.dumps(result))
         response.headers['Content-Type'] = 'application/json'
         return response
     else:
         # For whatever reason, the given token was invalid.
         response = make_response(
-            json.dumps('Failed to revoke token for given user.', 400))
+            json.dumps(result))
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -228,11 +232,14 @@ def catalog(category=None):
         all categories
 
     '''
-    logged_in = 0
+    logged_in = False
 
     if 'email' in login_session:
-        logged_in = 1
+        logged_in = True
 
+
+    print "Logged_in ", logged_in
+    print login_session
     categories = getAllCategories()
     if category:
         category = session.query(Category).filter(Category.name == category).one()
@@ -257,7 +264,7 @@ def showItem(category_name=None, item_name=None):
         the item name
     '''
 
-    logged_in = None
+    logged_in = False
 
     category_id = (session.query(Category)
                     .filter(Category.name == category_name).one()).id
@@ -265,7 +272,7 @@ def showItem(category_name=None, item_name=None):
         .filter(Item.name == item_name).one()
 
     if 'email' in login_session:
-        logged_in = "logged_in"
+        logged_in = True
 
         if login_session['email'] == item.user.email:
             return render_template('item.html', item=item, logged_in=logged_in)
@@ -283,10 +290,12 @@ def addItem(category=None):
         information
     '''
 
+
     if 'email' not in login_session:
         return redirect(url_for("catalog"))
 
-    logged_in = "logged_in"
+    logged_in = True
+
     error = None
     user_id = getUserID(login_session['email'])
     ''' If the url had a value for category get the category '''
@@ -332,14 +341,14 @@ def addItem(category=None):
                     session.commit()
         ''' If there was an error return to add item page with the error, '''
         if error:
-            return render_template('add_item.html', categories=categories, error=error)
+            return render_template('add_item.html', categories=categories, error=error, logged_in=logged_in)
 
         else:
             ''' otherwise flash that the item wa added and go the show item page
                 with the new item's info
             '''
             flash('Added %s!' % item.name)
-            return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name))
+            return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name, logged_in=logged_in))
 
     else:
         return render_template('add_item.html', categories=categories, category=category, logged_in=logged_in)
@@ -371,12 +380,12 @@ def updateItem(category_name, item_name):
         item = None
         error = "No item exists with this name and category"
 
-    logged_in = "logged_in"
-    print "l_s", login_session['email'], item.user.email
+
     if login_session["email"] != item.user.email:
 
         return redirect(url_for("catalog"))
 
+    logged_in = True
 
     ''' Set categories to all categories'''
     categories = getAllCategories()
@@ -458,18 +467,24 @@ def updateItem(category_name, item_name):
 
         ''' If there were errors return to the update page with the errors'''
         if error:
-            return render_template('update_item.html', categories=categories, item=item, error=error)
+            return render_template('update_item.html', categories=categories, item=item, error=error, logged_in=logged_in)
         else:
             ''' Otherwise, go the the show item page with the updated item '''
             flash('Updated %s!' % item.name)
-            return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name))
+            return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name, logged_in=logged_in))
 
-    return render_template('update_item.html', categories=categories, item=item)
+    return render_template('update_item.html', categories=categories, item=item, logged_in=logged_in)
 
 
 @app.route("/catalog/category/<category_name>/<item_name>/delete", methods=['GET', 'POST'])
 def deleteItem(category_name, item_name):
 
+
+    if login_session["email"] != item.user.email:
+
+        return redirect(url_for("catalog"))
+
+    logged_in = True
     error = None
 
     category = session.query(Category).filter(Category.name == category_name).one()
@@ -490,16 +505,16 @@ def deleteItem(category_name, item_name):
             if success:
                 item.image = None
             else:
-                return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name, error=error))
+                return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name, error=error, logged_in=logged_in))
 
         category = item.category.name
         deleted_name = item.name
         session.delete(item)
         session.commit()
         flash("%s deleted!" % deleted_name)
-        return redirect(url_for('catalog', category=category))
+        return redirect(url_for('catalog', category=category, logged_in=logged_in))
     else:
-        return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name, error=error))
+        return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name, error=error, logged_in=logged_in))
 
 
 @app.route('/uploads/<category_id>/<item_id>/<filename>')
