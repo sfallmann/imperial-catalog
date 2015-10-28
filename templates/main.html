@@ -10,6 +10,7 @@
         <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/styles.css') }}">
 
     </head>
+
     <body class="preload">
 
 
@@ -18,80 +19,27 @@
             {% include "flashes_errors.html" %}
             {% block content %}
             {% endblock %}
+
+
+        </div>
+        <div id="login-popup" class="container hide">
+
         </div>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bPopup/0.11.0/jquery.bpopup.min.js"></script>
         <script>
             //  https://css-tricks.com/transitions-only-after-page-load/  for delaying transitions after page load
             $(window).load(function() {
                 $("body").removeClass("preload");
             });
-        </script>
-        <script>
-            /*
 
+            $("#login-button").click(function(){
 
-
-            <iframe id="background-vid" type="text/html"
-            src="https://www.youtube.com/embed/u3WSG6SDE1w?&showinfo=0&enablejsapi=1&origin=http://localhost:8000"
-            frameborder="0"></iframe>
-
-            // 2. This code loads the IFrame Player API code asynchronously.
-            var tag = document.createElement('script');
-
-            tag.src = "https://www.youtube.com/iframe_api";
-            var firstScriptTag = document.getElementsByTagName('script')[0];
-            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-            // 3. This function creates an <iframe> (and YouTube player)
-            //    after the API code downloads.
-            var player;
-            function onYouTubeIframeAPIReady() {
-            player = new YT.Player('background-vid', {
-
-                videoId: 'u3WSG6SDE1w',
-                playerVars: { 'autoplay': 0, 'controls': 1 },
-                events: {
-                'onReady': onPlayerReady,
-                'onStateChange': onPlayerStateChange
-              }
+                window.location = "{{ url_for('showLogin')}}";
             });
 
-
-            }
-
-            // 4. The API will call this function when the video player is ready.
-            function onPlayerReady(event) {
-
-                event.target.loadPlaylist(
-                  {
-                        playlist: ["u3WSG6SDE1w"],
-                        index:0
-                  });
-                event.target.setLoop({loopPlaylists:"true"});
-                event.target.unMute();
-            event.target.playVideo();
-            }
-
-            // 5. The API calls this function when the player's state changes.
-            //    The function indicates that when playing a video (state=1),
-            //    the player should play for six seconds and then stop.
-            var done = false;
-            function onPlayerStateChange(event) {
-
-            }
-            function stopVideo() {
-                player.stopVideo();
-            }
-
-            console.log("FLASH: {{ messages }}");
-            /*
-            player.append('<param name="movie" value="https://youtube.com/embed/u3WSG6SDE1w?autoplay=1&controls=1&showinfo=0&autohide=1&loop=1enablejsapi=1&playlist=u3WSG6SDE1w">');
-            player.append('<param name="allowScriptAccess" value="always">');
-            player.append('<embed id="background-vid" src="https://youtube.com/embed/u3WSG6SDE1w?autoplay=1&controls&volume=1&showinfo=0&autohide=1&loop=1&enablejsapi=1&playlist=u3WSG6SDE1w" >');
-            */
-    </script>
-
+        </script>
 
 
         {% block scripts %}

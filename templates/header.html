@@ -29,7 +29,11 @@
                 </div>
                 <div id="menu-home-title">Home</div>
             </a>
-            <button id="login" type="button" class="btn btn-default navbar-btn navbar-right">Sign in</button>
+            {% if logged_in %}
+                <button id="logout-button" type="button" class="btn btn-default navbar-btn navbar-right">Sign Out</button>
+            {% else  %}
+                <button id="login-button" type="button" class="btn btn-default navbar-btn navbar-right">Sign In</button>
+            {% endif %}
         </div>
     </nav>
 </div>

@@ -21,13 +21,8 @@
                                 <h2>Latest Items</h2>
                             {% endif %}
                         </th>
-                        <th>{% if logged_in %}
-                                {% if category %}
-                                    <button class="pull-right btn btn-success" data-category="{{ category.name }}" id="-addItem">Add Item</button>
-                                {% else %}
-                                    <button class="pull-right btn btn-success" id="-addItem">Add Item</button>
-                                {% endif %}
-                            {% endif %}
+                        <th>
+
                         </th>
                     </tr>
                 </thead>
@@ -38,9 +33,9 @@
                             <a href="{{ url_for('showItem', category_name=item.category.name, item_name=item.name) }}">{{ item.name }}</a>
                         </td>
                         <td>
-                            {% if not category %}
-                                <em>({{ item.category.name|title }})</em>
-                            {% endif %}
+                        {% if not category %}
+                            <em>({{ item.category.name|title }})</em>
+                        {% endif %}
                         </td>
                     </tr>
 

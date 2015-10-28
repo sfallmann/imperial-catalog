@@ -17,9 +17,9 @@
                     <select  class="form-control" name="category" required>
                         {% for _category in categories %}
                             {% if category and category.id == _category.id %}
-                                <option selected="true" value="{{ _category.id }}">{{ _category.name|title }}</option>
+                                <option selected="true" value="{{ category.id }}">{{ _category.name|title }}</option>
                             {% else %}
-                                <option value="{{ _category.id }}">{{ _category.name|title }}</option>
+                                <option value="{{ category.id }}">{{ _category.name|title }}</option>
                             {% endif %}
                         {% endfor %}
                     </select>
