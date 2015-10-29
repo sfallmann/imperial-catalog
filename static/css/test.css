@@ -1,0 +1,39 @@
+//  https://css-tricks.com/transitions-only-after-page-load/ for delaying transitions after page load
+
+.preload * {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -ms-transition: none !important;
+    -o-transition: none !important;
+
+}
+
+
+
+body {
+    background-color: black;
+}
+
+#banner h1 {
+    min-width: 300px;
+}
+
+#banner {
+
+    background-color: firebrick;
+
+}
+
+top-header {
+    -webkit-box-shadow: -1px 0px 23px 5px rgba(250,250,250,1);
+    -moz-box-shadow: -1px 0px 23px 5px rgba(250,250,250,1);
+    box-shadow: -1px 0px 23px 5px rgba(250,250,250,1);
+
+}
+
+* {
+
+    font-family: 'Fjalla One', sans-serif;
+    font-size: 1.1em;
+    color: white;
+}

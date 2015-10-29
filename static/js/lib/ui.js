@@ -1,30 +1,26 @@
-(function(){
+(function(window){
     //  https://css-tricks.com/transitions-only-after-page-load/  for delaying transitions after page load
     $(document).load(function() {
         $("body").removeClass("preload");
     });
 
     var spinOpts = {
-        lines: 13 // The number of lines to draw
-        , length: 28 // The length of each line
-        , width: 14 // The line thickness
-        , radius: 42 // The radius of the inner circle
-        , scale: 1 // Scales overall size of the spinner
-        , corners: 1 // Corner roundness (0..1)
-        , color: '#FFFFFF' // #rgb or #rrggbb or array of colors
-        , opacity: 0.8 // Opacity of the lines
-        , rotate: 0 // The rotation offset
-        , direction: 1 // 1: clockwise, -1: counterclockwise
-        , speed: 1 // Rounds per second
-        , trail: 60 // Afterglow percentage
-        , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
-        , zIndex: 99999 // The z-index (defaults to 2000000000)
-        , className: 'spinner' // The CSS class to assign to the spinner
-        , top: '50%' // Top position relative to parent
-        , left: '50%' // Left position relative to parent
-        , shadow: false // Whether to render a shadow
-        , hwaccel: false // Whether to use hardware acceleration
-        , position: 'absolute' // Element positioning
+        lines: 13,
+        length: 28,
+        width: 14,
+        radius: 42,
+        scale: 1,
+        corners: 1,
+        color: '#FFFFFF',
+        opacity: 0.8,
+        rotate: 0,
+        direction: 1,
+        speed: 1,
+        trail: 60,
+        top: '50%',
+        left: '50%',
+        hwaccel: false,
+        position: 'absolute'
     }
 
     var popupOpts = {
@@ -36,26 +32,39 @@
     var target = document.getElementById('main')
     var spinner = new Spinner(spinOpts);
     var $popup = $("#popup");
+    var $deletePopup;
+
+    $("#google-login").click(function(){
+        $popup.bPopup();
+        spinner.spin(target);
+    });
 
 
     $("#addItem").click(function(){
         var url = $(this).data("url");
-
         window.location=url;
     });
 
 
+    $("#delete-button").click(function(){
+        $("#delete-confirm").toggleClass("hide");
+        $deletePopup = $('#delete-confirm').bPopup();
+    });
+
+    $("#edit-button").click(function(){
+        var $editPage = $(this).data("url");
+        window.location = $editPage;
+    });
+
+
+    $("#close-popup").click(function(){
+        $("#delete-confirm").toggleClass("hide");
+        $deletePopup.close();
+    });
+
     $("#login-button").click(function(){
-        /*
-        $popup.bPopup();
-        spinner.spin(target);
         var url = $(this).data("url");
         window.location = url;
-        */
-
-        var $auth = $("#authenticate");
-        $auth.toggleClass("hide");
-        $auth.bPopup();
     });
 
     $("#logout-button").click(function(){
@@ -69,12 +78,8 @@
             url: url,
             success: function(response) {
 
-
-
                 if (response.status === '200'){
-
                     window.location = redirect;
-
                 }
             },
             error: function(response){
@@ -85,5 +90,40 @@
         });
     });
 
+    window.googleCallback = function(authResult) {
+        var STATE = $("#STATE").val();
+        $("#google-login").addClass("hide");
+        //$("#result").text(authResult);
+        $.ajax({
+            type: 'POST',
+            url: '/ajax/gconnect?state=' + STATE,
+            processData: 'false',
+            contentType: 'application/octet-stream; charset=utf-8',
+            data: authResult['code'],
+            success: function (result) {
+                console.log(result);
+                if (result) {
+                    $popup.bPopup();
+                    spinner.spin(target);
 
-}());
+                    $("#result").html('Login Successful!</br>' + result + '</br>Redirecting...');
+
+                    setTimeout(function () {
+                        window.location.href = "/catalog";
+                    }, 4000);
+
+                } else if (authResult['error']) {
+                    console.log('There was an error: ' + authResult['error']);
+                } else {
+                    $("#result").html('Failed to make a server side call. Check your configuration and console.');
+                }
+
+            },
+            error: function(result){
+                $("#result").html(result.status + " " + result.statusText);
+            }
+
+        });
+    }
+
+}(window));

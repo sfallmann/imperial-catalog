@@ -5,7 +5,7 @@
         <div class="col-md-6">
             <h1>{{ item.name }}</h1>
             <div>
-                <button id="edit-button" data-edit="{{ url_for('updateItem',category_name=item.category.name, item_name=item.name)}}" class="btn btn-primary">Edit</button>
+                <button id="edit-button" data-url="{{ url_for('updateItem',category_name=item.category.name, item_name=item.name)}}" class="btn btn-primary">Edit</button>
                 <button id="delete-button" class="btn btn-danger">Delete</button>
             </div>
             <br>
@@ -42,32 +42,11 @@
     </form>
 
 </div>
-
 {% endblock %}
 {% block scripts %}
-
 <script>
 (function(){
-    var $deletePopup;
-    $("#delete-button").click(function(){
-        $("#delete-confirm").toggleClass("hide");
-        $deletePopup = $('#delete-confirm').bPopup();
-    });
 
-    $("#edit-button").click(function(){
-        var $editPage = $(this).data("edit");
-        window.location = $editPage;
-    });
-
-
-    $("#close-popup").click(function(){
-        $("#delete-confirm").toggleClass("hide");
-        $deletePopup.close();
-    });
 }());
-
-
-
-
 </script>
 {% endblock %}

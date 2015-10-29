@@ -479,14 +479,13 @@ def updateItem(category_name, item_name):
 @app.route("/catalog/category/<category_name>/<item_name>/delete", methods=['GET', 'POST'])
 def deleteItem(category_name, item_name):
 
+    error = None
+    logged_in= False
 
-    if login_session["email"] != item.user.email:
-
-        return redirect(url_for("catalog"))
+    if "email"  not in login_session:
+        return redirect(url_for("catalog", logged_in=logged_in))
 
     logged_in = True
-    error = None
-
     category = session.query(Category).filter(Category.name == category_name).one()
 
     try:
@@ -498,6 +497,11 @@ def deleteItem(category_name, item_name):
     categories = session.query(Category).all()
 
     if request.method == 'POST' and item is not None:
+
+        if login_session["email"] != item.user.email:
+            return redirect(url_for("showItem", category_name=category_name, item_name=item_name, logged_in=logged_in))
+
+
 
         if item.image:
             success, error = deleteItemFileFolder(item.category.id, item.id)
