@@ -72,10 +72,13 @@
         spinner.spin(target);
         var url = $(this).data("url");
         var redirect = $(this).data("redirect");
+        var csrf_token = $("#csrf_token").val();
+        alert (csrf_token);
 
         $.ajax({
             type: 'POST',
             url: url,
+            data: { "_csrf_token": $("#csrf_token").val() },
             success: function(response) {
 
                 if (response.status === '200'){
@@ -91,15 +94,16 @@
     });
 
     window.googleCallback = function(authResult) {
-        var STATE = $("#STATE").val();
+        var csrf_token = $("#csrf_token").val();
+        console.log(csrf_token);
         $("#google-login").addClass("hide");
         //$("#result").text(authResult);
         $.ajax({
             type: 'POST',
-            url: '/ajax/gconnect?state=' + STATE,
+            url: '/ajax/gconnect',
             processData: 'false',
-            contentType: 'application/octet-stream; charset=utf-8',
-            data: authResult['code'],
+            //contentType: 'application/json',
+            data: { 'code': authResult['code'], '_csrf_token': $("#csrf_token").val() },
             success: function (result) {
                 console.log(result);
                 if (result) {

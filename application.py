@@ -1,12 +1,12 @@
 import os, sys
 import shutil
 import random
-import string
 import requests
 import httplib2
 import json
+from helpers import *
 from datetime import timedelta
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, abort
 from flask import jsonify, url_for, flash, make_response, Markup
 from flask import session as login_session, send_from_directory
 from sqlalchemy import create_engine, asc, desc
@@ -16,7 +16,7 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 from werkzeug import secure_filename
 from models import Base, User, Category, Item
-from key_gen import get_secret_key
+
 
 
 # Default image for items obtained here
@@ -27,18 +27,21 @@ APPLICATION_NAME = "Imperial Catalog"
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 
-
 UPLOAD_FOLDER = 'uploads/'
 ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg', 'gif'])
-
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 engine = create_engine("sqlite:///catalog.db")
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.jinja_env.globals['logged_on'] = logged_on
+
+#app.permanent_session_lifetime = timedelta(minutes=10)
+
 
 
 # From http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
@@ -57,27 +60,37 @@ def allowed_file(filename):
            (filename.rsplit('.', 1)[1]).lower() in ALLOWED_EXTENSIONS
 
 
+#  Taken from http://flask.pocoo.org/snippets/3/
+
+
+@app.before_request
+def csrf_protect():
+    if request.method == "POST":
+        token = login_session.pop('_csrf_token', None)
+        if not token or token != request.form.get('_csrf_token'):
+            abort(403)
+
+def generate_csrf_token():
+    if '_csrf_token' not in login_session:
+        login_session['_csrf_token'] = random_string()
+    return login_session['_csrf_token']
+
+
+app.jinja_env.globals['csrf_token'] = generate_csrf_token
+
+
 # Create anti-forgery state token
 @app.route('/login')
 def showLogin():
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
-                    for x in xrange(32))
 
-    login_session.permanent = True
-    app.permanent_session_lifetime = timedelta(minutes=10)
-    login_session['state'] = state
-    # return "The current session state is %s" % login_session['state']
-    return render_template('login.html', STATE=state)
+    return render_template('login.html')
+
 
 @app.route('/ajax/gconnect', methods=['POST'])
 def gconnect():
-    # Check that the value of state sent matches state stored in the session
-    if request.args.get('state') != login_session['state']:
-        response = make_response(json.dumps('Invalid state parameter.'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
+
     # Obtain authorization code
-    code = request.data
+    code = request.form.get('code')
 
     try:
         # Upgrade the authorization code into a credentials object
@@ -232,14 +245,8 @@ def catalog(category=None):
         all categories
 
     '''
-    logged_in = False
+    #login_session.permanent = True
 
-    if 'email' in login_session:
-        logged_in = True
-
-
-    print "Logged_in ", logged_in
-    print login_session
     categories = getAllCategories()
     if category:
         category = session.query(Category).filter(Category.name == category).one()
@@ -248,7 +255,7 @@ def catalog(category=None):
         items = getLatestItems(10)
 
     return render_template('catalog.html', categories=categories,
-                               items=items, category=category, logged_in=logged_in)
+                               items=items, category=category)
 
 
 
@@ -264,20 +271,18 @@ def showItem(category_name=None, item_name=None):
         the item name
     '''
 
-    logged_in = False
+
 
     category_id = (session.query(Category)
                     .filter(Category.name == category_name).one()).id
     item = session.query(Item).filter(Item.category_id == category_id)\
         .filter(Item.name == item_name).one()
 
-    if 'email' in login_session:
-        logged_in = True
 
-        if login_session['email'] == item.user.email:
-            return render_template('item.html', item=item, logged_in=logged_in)
+    if login_session['email'] == item.user.email:
+        return render_template('item.html', item=item)
 
-    return render_template('p_item.html', item=item, logged_in=logged_in)
+    return render_template('p_item.html', item=item)
 
 
 ''' Function for adding an item to the db '''
@@ -294,7 +299,7 @@ def addItem(category=None):
     if 'email' not in login_session:
         return redirect(url_for("catalog"))
 
-    logged_in = True
+
 
     error = None
     user_id = getUserID(login_session['email'])
@@ -341,17 +346,17 @@ def addItem(category=None):
                     session.commit()
         ''' If there was an error return to add item page with the error, '''
         if error:
-            return render_template('add_item.html', categories=categories, error=error, logged_in=logged_in)
+            return render_template('add_item.html', categories=categories, error=error)
 
         else:
             ''' otherwise flash that the item wa added and go the show item page
                 with the new item's info
             '''
             flash('Added %s!' % item.name)
-            return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name, logged_in=logged_in))
+            return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name))
 
     else:
-        return render_template('add_item.html', categories=categories, category=category, logged_in=logged_in)
+        return render_template('add_item.html', categories=categories, category=category)
 
 
 ''' Function for updating an item in the db '''
@@ -385,7 +390,6 @@ def updateItem(category_name, item_name):
 
         return redirect(url_for("catalog"))
 
-    logged_in = True
 
     ''' Set categories to all categories'''
     categories = getAllCategories()
@@ -467,25 +471,23 @@ def updateItem(category_name, item_name):
 
         ''' If there were errors return to the update page with the errors'''
         if error:
-            return render_template('update_item.html', categories=categories, item=item, error=error, logged_in=logged_in)
+            return render_template('update_item.html', categories=categories, item=item, error=error)
         else:
             ''' Otherwise, go the the show item page with the updated item '''
             flash('Updated %s!' % item.name)
-            return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name, logged_in=logged_in))
+            return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name))
 
-    return render_template('update_item.html', categories=categories, item=item, logged_in=logged_in)
+    return render_template('update_item.html', categories=categories, item=item)
 
 
 @app.route("/catalog/category/<category_name>/<item_name>/delete", methods=['GET', 'POST'])
 def deleteItem(category_name, item_name):
 
     error = None
-    logged_in= False
 
     if "email"  not in login_session:
-        return redirect(url_for("catalog", logged_in=logged_in))
+        return redirect(url_for("catalog"))
 
-    logged_in = True
     category = session.query(Category).filter(Category.name == category_name).one()
 
     try:
@@ -499,7 +501,7 @@ def deleteItem(category_name, item_name):
     if request.method == 'POST' and item is not None:
 
         if login_session["email"] != item.user.email:
-            return redirect(url_for("showItem", category_name=category_name, item_name=item_name, logged_in=logged_in))
+            return redirect(url_for("showItem", category_name=category_name, item_name=item_name))
 
 
 
@@ -509,16 +511,16 @@ def deleteItem(category_name, item_name):
             if success:
                 item.image = None
             else:
-                return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name, error=error, logged_in=logged_in))
+                return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name, error=error))
 
         category = item.category.name
         deleted_name = item.name
         session.delete(item)
         session.commit()
         flash("%s deleted!" % deleted_name)
-        return redirect(url_for('catalog', category=category, logged_in=logged_in))
+        return redirect(url_for('catalog', category=category))
     else:
-        return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name, error=error, logged_in=logged_in))
+        return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name, error=error))
 
 
 @app.route('/uploads/<category_id>/<item_id>/<filename>')
@@ -613,7 +615,11 @@ def getAllCategories():
 def getLatestItems(num):
     return session.query(Item).order_by(Item.created.desc())[:num]
 
+
+
+
 if __name__ == '__main__':
-    app.secret_key = '+_b)+_5hc3=7zc9xp_&ybw-#991k$p_dno#0wdu$=xppver)w4'
+    app.secret_key = random_string()
+
     app.debug = True
     app.run(host='0.0.0.0', port=8000)

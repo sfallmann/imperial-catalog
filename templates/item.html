@@ -31,7 +31,7 @@
 <div  id="delete-confirm" class="container hide">
 
     <form  action="{{ url_for('deleteItem', category_name=item.category.name, item_name=item.name)}}" method="POST">
-
+            <input name="_csrf_token" value="{{ csrf_token() }}" type="hidden">
             <h3>Delete {{ item.name }}</h3>
             <p>Are you sure you want to delete?</p>
 

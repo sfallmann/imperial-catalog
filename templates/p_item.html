@@ -3,6 +3,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-6">
+            <input type="hidden" id="csrf_token"  name="csrf_token" value="{{ csrf_token() }}">
             <h1>{{ item.name }}</h1>
 
             <br>

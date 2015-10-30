@@ -11,6 +11,7 @@
             </ul>
         </div>
         <div class="col-md-6">
+
             <table id="-items" class="table table-responsive">
                 <thead>
                     <tr>
@@ -21,7 +22,7 @@
                                 <h2>Latest Items</h2>
                             {% endif %}
                         </th>
-                        <th>{% if logged_in %}
+                        <th>{% if logged_on() %}
                                 {% if category %}
                                     <button class="pull-right btn btn-success" data-url="{{ url_for('addItem', category=category.name) }}" id="addItem">Add Item</button>
                                 {% else %}
