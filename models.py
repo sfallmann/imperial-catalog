@@ -1,12 +1,10 @@
 """ Setup the the models for the catalog db."""
 import datetime
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, DateTime
-from sqlalchemy.ext.declarative import declarative_base
+from database import Base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
 
-
-Base = declarative_base()
 
 
 """Define the User Model for the database"""
@@ -95,6 +93,3 @@ class Item(Base):
             'user_id': self.user_id
         }
 
-# Connect to the database
-engine = create_engine('sqlite:///catalog.db')
-Base.metadata.create_all(engine)

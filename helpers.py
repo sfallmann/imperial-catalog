@@ -4,7 +4,6 @@ from flask import session
 
 def logged_on():
     if 'email' in session:
-        print session
         return True
     else:
         return False
@@ -13,6 +12,3 @@ def logged_on():
 def random_string():
     return ''.join(random.choice(string.ascii_uppercase + string.digits)
             for x in xrange(32))
-
-
-
