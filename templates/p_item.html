@@ -4,7 +4,7 @@
     <div class="row">
         <div class="col-md-6">
             <input type="hidden" id="csrf_token"  name="csrf_token" value="{{ csrf_token() }}">
-            <h1>{{ item.name }}</h1>
+            <h1 id="item-name">{{ item.name }}</h1>
 
             <br>
             <article>
@@ -12,6 +12,7 @@
             </article>
             <hr>
             <cite>added by {{ item.user.name }} </cite>
+            <br>
             <br>
         </div>
 

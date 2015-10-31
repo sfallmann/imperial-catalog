@@ -10,35 +10,53 @@
 
 
 
+/* http://mixhdwallpapers.com/wp-content/uploads/2014/05/1100.jpg */
 body {
-    background-color: black;
+
+    background-image: url(../img/stormtroopers.jpg);
+
+    background-size: cover;
 }
 
 #banner h1 {
     min-width: 300px;
 }
+/* http://www.freeimageslive.com/galleries/space/planettextures/pics/mgn_p39657.gif */
 
+/* http://backgrounds.mysitemyway.com/background/seamless-red-textures-2/ */
 #banner {
+    text-shadow: 2px 2px 2px #000, 6px 6px 5px black;
+    background-image: url(../img/red015.jpg);
+    background-repeat: repeat-x;
+    -webkit-box-shadow: 0px 5px 10px 2px rgba(192, 0, 0, 0.75);
+    -moz-box-shadow:    0px 5px 10px 2px rgba(192, 0, 0, 0.75);
+    box-shadow:         0px 5px 10px 2px rgba(192, 0, 0, 0.75);
 
-    background-color: firebrick;
+}
+
+#catalog-navbar-collapse {
+    -webkit-box-shadow: 0px 5px 10px 2px rgba(192, 0, 0, 0.75);
+    -moz-box-shadow:    0px 5px 10px 2px rgba(192, 0, 0, 0.75);
+    box-shadow:         0px 5px 10px 2px rgba(192, 0, 0, 0.75);
 
 }
 
-top-header {
-    -webkit-box-shadow: -1px 0px 23px 5px rgba(250,250,250,1);
-    -moz-box-shadow: -1px 0px 23px 5px rgba(250,250,250,1);
-    box-shadow: -1px 0px 23px 5px rgba(250,250,250,1);
-
-}
+.img-responsive {
+    -webkit-box-shadow: 0px 0px 15px 5px rgba(255, 255, 255, 0.75);
+    -moz-box-shadow:    0px 0px 15px 5px rgba(255, 255, 255, 0.75);
+    box-shadow:         0px 0px 15px 5px rgba(255, 255, 255, 0.75);
+    }
 
 * {
-    //z-index: 1;
+
     font-family: 'Fjalla One', sans-serif;
     font-size: 1.1em;
     color: white;
 }
 
-
+#item-name {
+    text-shadow: -1px 1px 8px red, 1px -1px 8px red;
+}
 
 ul {
     list-style-image:url(galemp_list_style.png.png.png);
@@ -49,7 +67,8 @@ a {
 }
 
 #main {
-    background-color: black;
+    background-color: rgba(0,0,0,0.6);
+    min-height: 100vh;
 }
 
 
@@ -191,31 +210,35 @@ input {
 
 
 
-@media screen and (max-width: 767px){
-    #menu-home-title {
-        left: 10px;
-    }
 
-
-    #login {
-        margin: 2px 0 0 25px;
-    }
-
-
-
-
-}
-
+/* http://www.wallpaperzzz.com/wallpapers/normal/hires/galactic-empire.jpg */
 @media screen and (max-width: 1080px ){
 
     .container {
         padding-bottom: 0;
         padding-top: 0;
     }
+    body {
 
+        background-image: url(../img/galactic-empire.jpg);
+        background-repeat: repeat-y;
+        background-size: contain;
+    }
 
 }
 
+@media screen and (max-width: 767px){
+    #menu-home-title {
+        left: 10px;
+    }
+
+    #login-button, #logout-button {
+        margin-top: 6px;
+        margin-bottom: 6px;
+    }
+
+
+}
 @media screen and (min-width: 768px){
 
 

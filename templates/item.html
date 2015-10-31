@@ -3,7 +3,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-6">
-            <h1>{{ item.name }}</h1>
+            <h1 id="item-name">{{ item.name }}</h1>
             <div>
                 <button id="edit-button" data-url="{{ url_for('updateItem',category_name=item.category.name, item_name=item.name)}}" class="btn btn-primary">Edit</button>
                 <button id="delete-button" class="btn btn-danger">Delete</button>

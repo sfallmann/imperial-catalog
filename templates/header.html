@@ -31,7 +31,7 @@
                     <div id="menu-home-title">Home</div>
                 </a>
                 {% if logged_on() %}
-                <button id="logout-button" data-url="{{ url_for('gdisconnect')}}" data-redirect="{{ url_for('catalog')}}" type="button" class="btn btn-default navbar-btn navbar-right">
+                <button id="logout-button" data-url="{{ url_for('disconnect')}}" data-redirect="{{ url_for('catalog')}}" type="button" class="btn btn-default navbar-btn navbar-right">
                         Sign Out
                     </button>
                 {% else  %}

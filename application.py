@@ -12,7 +12,8 @@
        users.
 '''
 
-import os, sys
+import os
+import sys
 import shutil
 import random
 import string
@@ -31,8 +32,7 @@ from oauth2client.client import FlowExchangeError
 from werkzeug import secure_filename
 from werkzeug.contrib.atom import AtomFeed
 from models import Base, User, Category, Item
-from database import db_session as session, path
-
+from database import db_session as session
 
 
 # Default image for items obtained here:
@@ -45,7 +45,7 @@ CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 
 # Name of the upload folder
-UPLOAD_FOLDER = '%s/uploads/' % path
+UPLOAD_FOLDER = 'uploads/'
 
 # Filetypes allowed for upload
 # TODO: Verify by MIME type
@@ -54,7 +54,6 @@ ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.permanent_session_lifetime = timedelta(minutes=10)
 
 
 def logged_on():
@@ -69,7 +68,7 @@ app.jinja_env.globals['logged_on'] = logged_on
 
 def random_string():
     return ''.join(random.choice(string.ascii_uppercase + string.digits)
-            for x in xrange(32))
+                   for x in xrange(32))
 
 
 # From http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
@@ -86,7 +85,6 @@ def allowed_file(filename):
            (filename.rsplit('.', 1)[1]).lower() in ALLOWED_EXTENSIONS
 
 
-
 @app.teardown_appcontext
 def shutdown_session(exception=None):
 
@@ -94,9 +92,6 @@ def shutdown_session(exception=None):
         of the request or when the application shuts down.
     '''
     session.remove()
-
-
-
 
 
 @app.before_request
@@ -121,6 +116,23 @@ def generate_csrf_token():
 
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
+
+
+def loginStatusOutput():
+
+    ''' Creates the html for a successful login '''
+    output = ''
+    output += '<h1>Welcome, '
+    output += login_session['name']
+    output += '!</h1>'
+    output += '<img src="'
+    output += login_session['image']
+    output += ' " style = "width: 300px; height: 300px;border-radius:\
+            150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+
+    flash("You are now logged in as %s" % login_session['name'])
+
+    return output
 
 
 @app.route('/login')
@@ -152,7 +164,7 @@ def gconnect():
         Store the access token in the session for later use.
 
         Get user info and store it in the session and return
-        the html to display the information in the page
+        the html by invoking loginStatusOutput.
 
         TODO:  Create a template to show this information
     '''
@@ -173,8 +185,8 @@ def gconnect():
     # Check that the access token is valid.
     access_token = credentials.access_token
 
-    url =  'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'\
-            % access_token
+    url = 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'\
+          % access_token
     r = requests.get(url)
     result = r.json()
 
@@ -201,12 +213,13 @@ def gconnect():
     stored_credentials = login_session.get('credentials')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_credentials is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(
+                        json.dumps('Current user is already connected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
     # Store the access token in the session for later use.
+    login_session['provider'] = 'google'
     login_session['access_token'] = access_token
     login_session['gplus_id'] = gplus_id
 
@@ -227,34 +240,19 @@ def gconnect():
 
     login_session['user_id'] = user_id
 
-    output = ''
-    output += '<h1>Welcome, '
-    output += login_session['name']
-    output += '!</h1>'
-    output += '<img src="'
-    output += login_session['image']
-    output += ' " style = "width: 300px; height: 300px;border-radius:\
-            150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-    flash("you are now logged in as %s" % login_session['name'])
-    return output
+    return loginStatusOutput()
 
 
-
-@app.route('/ajax/gdisconnect', methods=['POST'])
 def gdisconnect():
 
     ''' Revoke a current user's token.
 
-        Only disconnects a connected user and resets
-        login_session user related info if a 200 response
-        results from a request to the Google API to
-        revoke the token.
+        Only disconnects a connected user.
 
-        Otherwise, the token is assumed invalid and
-        the result from the request is returned as json
+        If a successful response isn't returned the token is assumed
+        invalid and the result from the request is returned as json.
     '''
-    #
-    #
+
     access_token = login_session.get('access_token')
     if access_token is None:
         response = make_response(
@@ -262,30 +260,144 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token
 
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
 
-
-    if result['status'] == '200':
-        # Reset the user's sesson.
-        del login_session['access_token']
-        del login_session['gplus_id']
-        del login_session['name']
-        del login_session['email']
-        del login_session['image']
-
-        response = make_response(json.dumps(result))
-        response.headers['Content-Type'] = 'application/json'
-        return response
-    else:
+    if result['status'] != '200':
         # For whatever reason, the given token was invalid.
         response = make_response(
             json.dumps(result))
         response.headers['Content-Type'] = 'application/json'
         return response
+
+
+@app.route('/ajax/fbconnect', methods=['POST'])
+def fbconnect():
+
+    ''' Facebook API OAuth2 Authentication
+
+
+        Obtain the access_token submitted.
+
+        Get the the app_id and app_secret from the json file.
+
+        Send the access_token, app_id and app_secret to
+        the authententication url to get back an access token.
+
+        Strip the expiration tag from the token.
+
+        Send the token to the user info url to get back
+        the info for the authenticated user.
+
+        Add the info to the session.
+
+        Check if the user exists in the database.  If not,
+        create the user.
+
+        Return the html by invoking loginStatusOutput.
+
+        TODO:  Create a template to show this information
+    '''
+
+    access_token = request.form.get('access_token')
+
+    app_id = json.loads(open('fb_client_secrets.json', 'r').read())[
+        'web']['app_id']
+    app_secret = json.loads(
+        open('fb_client_secrets.json', 'r').read())['web']['app_secret']
+    url = 'https://graph.facebook.com/oauth/access_token?grant_type='\
+          'fb_exchange_token&client_id=%s&client_secret=%s&'\
+          'fb_exchange_token=%s' % (app_id, app_secret, access_token)
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[1]
+
+    # strip expire tag from access token
+    token = result.split("&")[0]
+
+    url = 'https://graph.facebook.com/v2.4/me?%s&fields=name,id,email' % token
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[1]
+    # print "url sent for API access:%s"% url
+    # print "API JSON result: %s" % result
+    data = json.loads(result)
+    login_session['provider'] = 'facebook'
+    login_session['name'] = data["name"]
+    login_session['email'] = data["email"]
+    login_session['facebook_id'] = data["id"]
+
+    # Strip out the equal sign before storing the token
+    # for use in logout.
+    stored_token = token.split("=")[1]
+    login_session['access_token'] = stored_token
+
+    # Get user picture
+    url = 'https://graph.facebook.com/v2.4/me/picture?%s&redirect=0&'\
+          'height=200&width=200' % token
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[1]
+    data = json.loads(result)
+
+    login_session['image'] = data["data"]["url"]
+
+    # see if user exists
+    user_id = getUserID(login_session['email'])
+    if not user_id:
+        user_id = createUser(login_session)
+    login_session['user_id'] = user_id
+
+    return loginStatusOutput()
+
+
+def fbdisconnect():
+    ''' Disconnects Facebook login session
+
+        Send back the access token and the facebook id
+        to delete the token
+    '''
+
+    facebook_id = login_session['facebook_id']
+    # The access token must me included to successfully logout
+    access_token = login_session['access_token']
+    url = 'https://graph.facebook.com/%s/permissions?access_token=%s'\
+          % (facebook_id, access_token)
+    h = httplib2.Http()
+    result = h.request(url, 'DELETE')[1]
+    return "You have been logged out"
+
+
+# Disconnect based on provider
+@app.route('/disconnect')
+def disconnect():
+
+    ''' Disconnects from the provider used for
+        authentication.
+    '''
+
+    if 'provider' in login_session:
+        if login_session['provider'] == 'google':
+            gdisconnect()
+
+            del login_session['gplus_id']
+
+        if login_session['provider'] == 'facebook':
+            fbdisconnect()
+            del login_session['facebook_id']
+
+        del login_session['access_token']
+        del login_session['name']
+        del login_session['email']
+        del login_session['image']
+        del login_session['user_id']
+        del login_session['provider']
+
+        flash("You have successfully been logged out.")
+
+        return redirect(url_for('catalog'))
+    else:
+        flash("You were not logged in")
+        return redirect(url_for('catalog'))
 
 
 def createUser(login_session):
@@ -318,7 +430,6 @@ def getUserID(email):
         return None
 
 
-
 @app.route('/feed')
 def itemsATOM():
 
@@ -340,8 +451,7 @@ def itemsATOM():
                 content=i.description,
                 content_type="html",
                 author=i.user.name,
-                url="http://localhost:8000/%s/%s"\
-                     % (c.name,i.name),
+                url="http://localhost:8000/%s/%s" % (c.name, i.name),
                 updated=datetime.datetime.utcnow(),
                 )
 
@@ -408,23 +518,23 @@ def catalog(category=None):
         all categories.
 
         Return the rendered catalog template
-
     '''
-    #login_session.permanent = True
 
     categories = getAllCategories()
     if category:
-        category = session.query(Category).filter(Category.name == category).one()
+        category = session.query(Category).filter(
+                   Category.name == category).one()
         items = category.items
     else:
         items = getLatestItems(10)
 
     return render_template('catalog.html', categories=categories,
-                               items=items, category=category)
+                           items=items, category=category)
 
 
 @app.route("/catalog/category/<category_name>/<item_name>")
 def showItem(category_name=None, item_name=None):
+
     ''' Get the category_id from the name passed in.
 
         Then get the item from the category_id and
@@ -437,13 +547,14 @@ def showItem(category_name=None, item_name=None):
         update buttons.
     '''
 
-    category_id = (session.query(Category)
-                    .filter(Category.name == category_name).one()).id
-    item = session.query(Item).filter(Item.category_id == category_id)\
-        .filter(Item.name == item_name).one()
+    category_id = (session.query(Category).filter(
+                   Category.name == category_name).one()).id
+    item = session.query(Item).filter(Item.category_id == category_id).filter(
+                    Item.name == item_name).one()
 
-    if 'email' not in login_session or login_session['email'] != item.user.email:
-            return render_template('p_item.html', item=item)
+    if ('email' not in login_session or
+       login_session['email'] != item.user.email):
+        return render_template('p_item.html', item=item)
     else:
         return render_template('item.html', item=item)
 
@@ -466,11 +577,11 @@ def addItem(category=None):
 
     # If the url had a value for category get the category
     if category:
-        category = session.query(Category).filter(Category.name ==  category).one()
+        category = session.query(Category).filter(
+                   Category.name == category).one()
 
     # Set categories to all categories
     categories = getAllCategories()
-
 
     if request.method == 'POST':
 
@@ -482,10 +593,14 @@ def addItem(category=None):
         # Check if the item name exists in the category.
         # If it does set error
         if item_name_used(category_id, name):
-            error = "%s exists in the selected category. Pick a different name" % name
+            error = "%s exists in the selected category."\
+                    "Pick a different name" % name
         # Otherwise create the item
         else:
-            item = Item(name=name,description=description,category_id=category_id,user_id=user_id)
+            item = Item(name=name,
+                        description=description,
+                        category_id=category_id,
+                        user_id=user_id)
 
             session.add(item)
             session.commit()
@@ -496,7 +611,8 @@ def addItem(category=None):
                 file = request.files['image']
 
                 # Set success and error to the results of addItemFileFolder
-                success, error = addItemFileFolder(file, item.category_id, item.id)
+                success, error = addItemFileFolder(
+                                 file, item.category_id, item.id)
 
                 # If it was successful, set item.image to the filename and
                 # add the item to the db again to update it
@@ -506,18 +622,24 @@ def addItem(category=None):
                     session.commit()
         # If there was an error return to add item page with the error
         if error:
-            return render_template('add_item.html', categories=categories, error=error)
+            return render_template(
+                   'add_item.html', categories=categories, error=error)
         # Otherwise, flash that the item was added and go the show item page
         # with the new item's info
         else:
             flash('Added %s!' % item.name)
-            return redirect(url_for('showItem', category_name=item.category.name, item_name=item.name))
+            return redirect(url_for(
+                            'showItem',
+                            category_name=item.category.name,
+                            item_name=item.name))
     # Returns the add item template on a GET request
     else:
-        return render_template('add_item.html', categories=categories, category=category)
+        return render_template(
+               'add_item.html', categories=categories, category=category)
 
 
-@app.route("/catalog/category/<category_name>/<item_name>/update", methods=['GET', 'POST'])
+@app.route("/catalog/category/<category_name>/<item_name>/update",
+           methods=['GET', 'POST'])
 def updateItem(category_name, item_name):
 
     ''' Updates an item in the database'''
@@ -536,9 +658,9 @@ def updateItem(category_name, item_name):
 
     # Look for the item in the database.
     try:
-        item = session.query(Item).filter(Item.category_id == category.id).filter(
-                Item.name == item_name).one()
-
+        item = session.query(Item).filter(
+               Item.category_id == category.id).filter(
+               Item.name == item_name).one()
 
     # If it's not there set the error message and redirect
     # to the catalog view.
@@ -593,7 +715,7 @@ def updateItem(category_name, item_name):
                 # to remove the old file since it had the
                 # same name as the existing image.
                 if item.image and item.image == file.filename:
-                    file.filename  = "copy_of_" + file.filename
+                    file.filename = "copy_of_" + file.filename
 
                 # Set success and error to the results of addItemFileFolder
                 success, error = addItemFileFolder(file, category_id, item.id)
@@ -603,28 +725,31 @@ def updateItem(category_name, item_name):
                     # Checks if item.image has a value. If it does
                     # try removing the old file.
                     if item.image:
-                        success, error = removeOldFile(old_category_id, item.id, item.image)
+                        success, error = removeOldFile(
+                                         old_category_id, item.id, item.image)
 
                     # Then if item.image has a value and the category_id
                     # of the item is different than the category_id prior to
                     # the update and file removal was successful, try removing
                     # the folder for the item's image.
-                    elif item.image and category_id != old_category_id and success:
-                        success, error = deleteItemFileFolder(old_category_id, item.id)
+                    elif (item.image and category_id != old_category_id and
+                          success):
+                        success, error = deleteItemFileFolder(
+                                         old_category_id, item.id)
 
-                    # If that was successful set item.image to the new filename.
+                    # If successful set item.image to the new filename.
                     if success:
                         item.image = file.filename
 
-            # Check if the item already has an image and the category id changed
+            # Check if the item has an image and the category id changed
             # but a new image wasn't uploaded
             elif item.image and category_id != old_category_id:
 
                 # Get the value of the old folder and set the value of the new
                 old_folder = app.config['UPLOAD_FOLDER'] + "/%s/%s/"\
-                            % (old_category_id, item.id)
+                    % (old_category_id, item.id)
                 new_folder = app.config['UPLOAD_FOLDER'] + "/%s/%s/"\
-                            % (category_id, item.id)
+                    % (category_id, item.id)
 
                 # Try moving the item folder under the new category folder
                 try:
@@ -645,21 +770,25 @@ def updateItem(category_name, item_name):
         # Otherwise, go the the show item page with the updated item
         else:
             flash('Updated %s!' % item.name)
-            return redirect(url_for('showItem', category_name=item.category.name,
-                                    item_name=item.name))
+            return redirect(url_for(
+                   'showItem',
+                   category_name=item.category.name,
+                   item_name=item.name))
 
     # Returns the update_item template on a GET request
-    return render_template('update_item.html', categories=categories, item=item)
+    return render_template(
+           'update_item.html', categories=categories, item=item)
 
 
-@app.route("/catalog/category/<category_name>/<item_name>/delete", methods=['GET', 'POST'])
+@app.route("/catalog/category/<category_name>/<item_name>/delete",
+           methods=['GET', 'POST'])
 def deleteItem(category_name, item_name):
 
     ''' Delete an item in the database'''
 
     #  Checks to see if the user is authenticated
     #  If not, redirect to the catalog view
-    if "email"  not in login_session:
+    if "email" not in login_session:
         return redirect(url_for("catalog"))
 
     # Set error to None.  Error will be used for checking
@@ -719,7 +848,7 @@ def deleteItem(category_name, item_name):
 
 
 @app.route('/uploads/<category_id>/<item_id>/<filename>')
-def uploaded_file(category_id,item_id,filename):
+def uploaded_file(category_id, item_id, filename):
 
     ''' Returns uploaded file for viewing '''
 
@@ -737,7 +866,8 @@ def item_name_used(category_id, name):
     '''
 
     try:
-        item = session.query(Item).filter(Item.category_id == category_id).filter(Item.name == name).one()
+        item = session.query(Item).filter(
+               Item.category_id == category_id).filter(Item.name == name).one()
         return True
     except NoResultFound:
         return False
@@ -802,9 +932,6 @@ def addItemFileFolder(file, category_id, item_id):
         error = "The filetype is not allowed."
 
     return success, error
-
-
-
 
 
 def deleteItemFileFolder(category_id, item_id):
