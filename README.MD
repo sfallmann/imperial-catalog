@@ -1,6 +1,6 @@
-#Imperial Catalog - Project 3 Full Stack Nanodegree
+# Imperial Catalog - Project 3 Full Stack Nanodegree
 
-###Requirements
+### Requirements
 * Python 2.7+ https://www.python.org/
 * Install Vagrant, VirtualBox, and clone the fullstack-nanodegree-vm.
   Full instructions located here https://www.udacity.com/wiki/ud197/install-vagrant
@@ -15,7 +15,7 @@
 
 
 
-###Install:
+### Install:
     * Download or clone this repository
     * cd to the folder the files were extracted\copied to
     * Get the json file for the registered Google app (see above)
@@ -48,11 +48,11 @@
         * python popuplate_db.py to populate the db with starter data
         * python application.py to start the application
 
-###Use:
+### Use:
     * Browse to http://localhost:8000
     * For IE, allow this site (http://localhost:8000) as a trusted site.  If you don't do this,
       authentication will not work.
 
-###The catalog's theme is based on the Galactic Empire in the Star Wars Universe.
+### The catalog's theme is based on the Galactic Empire in the Star Wars Universe.
    The app is fully responsive and will work well on mobile devices (only tested Android devices although
    it should work fine on iOS)
