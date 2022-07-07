@@ -3,5 +3,5 @@ Jinja2==2.7.2
 SQLAlchemy==0.8.4
 Werkzeug==0.9.4
 oauth2client==1.5.1
-requests==2.2.1
+requests==2.20.0
 urllib3==1.7.1
